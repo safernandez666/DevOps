@@ -1,0 +1,87 @@
+on:
+  # Trigger analysis when pushing in master or pull requests, and when creating
+  # a pull request. 
+  push:
+    branches:
+      - main
+  pull_request:
+      types: [opened, synchronize, reopened]
+
+name: Publish To Docker & Okteto
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+    ##########################
+    # Checkout the code base #
+    ##########################
+    - uses: actions/checkout@master
+    - name: Publish to Registry
+      uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: safernandez666/okteto
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        dockerfile: ./Dockerfile
+        tags: "latest,${{ github.sha }}"
+    ##########################
+    #     Detect Secrets     #
+    ##########################
+    - name: Detect Secrets
+      uses: evanextreme/detect-secrets-action@1.0.0
+    ##########################
+    #       Trivy Scan       #
+    ##########################
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'docker.io/safernandez666/okteto:${{ github.sha }}'
+        format: 'template'
+        template: '@/contrib/sarif.tpl'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: 'trivy-results.sarif'
+    ##########################
+    #  Deploy K8S to Okteto  #
+    ##########################
+    - name: Login
+      uses: okteto/login@master
+      with:
+        token: ${{ secrets.OKTETO_TOKEN }}
+
+    - name: Activate Namespace
+      uses: okteto/namespace@master
+      with:
+        namespace: safernandez666
+    
+    - name: Deploy App
+      uses: okteto/apply@master
+      with:
+        namespace: safernandez666
+        manifest: deployment/deployment.yaml
+
+    - name: Deploy to Cluster
+      uses: steebchen/kubectl@master
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+      with:
+        args: set image --record deployment/flaskapp-deployment flaskapp=safernandez666/okteto:${{ github.sha }}
+    
+    - name: Verify Deployment
+      uses: steebchen/kubectl@master
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+        KUBECTL_VERSION: "1.15"
+      with:
+        args: '"rollout status deployment/flaskapp-deployment"'
+    ##########################
+    #      DAST Analisys     #
+    ##########################
+    - name: ZAP Scan
+      uses: zaproxy/action-baseline@v0.4.0
+      with:
+        target: 'https://flaskapp-deployment-safernandez666.cloud.okteto.net/'
