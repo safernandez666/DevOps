@@ -11,7 +11,7 @@ RUN pip install --upgrade pip
 RUN pip install --no-cache-dir flask flask-api ifaddr
 
 #Copy the application to the working directory
-COPY app.py ./
+COPY src/app.py ./
 COPY static ./static
 COPY template ./template
 
