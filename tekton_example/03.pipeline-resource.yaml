@@ -1,23 +1,22 @@
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
-  name: git-knative-tutorial
+  name: devops-git
 spec:
   type: git
   params:
     - name: revision
       value: main
     - name: url
-      # Point to your repo
-      value: https://github.com/safernandez666/DevOps
+      value: https://github.com/safernandez666/devops
+
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
-  name: image-docker-knative-tutorial
+  name: devops-tekton-demo-image
 spec:
   type: image
   params:
     - name: url
-      # Replace meteatamel with your Docker ID
-      value: docker.io/safernandez666/app:latest
+      value: safernandez666/app

@@ -1,22 +1,20 @@
 apiVersion: tekton.dev/v1beta1
 kind: TaskRun
 metadata:
-  name: build-helloworld-docker
+  name: build-docker-image-from-git-source-task-run
 spec:
-  serviceAccountName: build-bot
+  serviceAccountName: dockerhub-service
   taskRef:
     name: build-docker-image-from-git-source
   params:
     - name: pathToDockerFile
       value: Dockerfile
-    - name: pathToContext
-      value: $(resources.inputs.docker-source.path)/app
   resources:
     inputs:
       - name: docker-source
         resourceRef:
-          name: git-knative-tutorial
+          name: devops-git
     outputs:
       - name: builtImage
         resourceRef:
-          name: image-docker-knative-tutorial
+          name: devops-tekton-demo-image
