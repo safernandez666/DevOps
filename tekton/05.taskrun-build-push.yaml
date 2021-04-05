@@ -1,6 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: TaskRun
 metadata:
+  namespace: cicd
   name: build-docker-image-from-git-source-task-run
 spec:
   serviceAccountName: dockerhub-service
