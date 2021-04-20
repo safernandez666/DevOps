@@ -2,11 +2,11 @@ apiVersion: tekton.dev/v1beta1
 kind: TaskRun
 metadata:
   namespace: cicd
-  name: build-docker-image-from-git-source-task-run
+  name: build-push
 spec:
   serviceAccountName: dockerhub-service
   taskRef:
-    name: build-docker-image-from-git-source
+    name: build-push
   params:
     - name: pathToDockerFile
       value: Dockerfile
@@ -18,4 +18,4 @@ spec:
     outputs:
       - name: builtImage
         resourceRef:
-          name: devops-tekton-demo-image
+          name: devops-image

@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   namespace: cicd
-  name: build-docker-image-from-git-source
+  name: build-push
 spec:
   params:
     - name: pathToDockerFile
